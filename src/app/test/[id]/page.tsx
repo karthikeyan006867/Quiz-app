@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { QuizRunner } from "@/components/QuizRunner";
+import { TestModePicker } from "@/components/TestModePicker";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -51,7 +51,7 @@ export default async function TestPage({
 
   return (
     <main className="min-h-screen px-4 py-8 sm:px-6">
-      <QuizRunner
+      <TestModePicker
         test={{
           id: test.id,
           title: test.title,
