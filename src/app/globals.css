@@ -1,0 +1,23 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f6f9ff;
+  --foreground: #0f172a;
+}
+
+body {
+  background:
+    radial-gradient(circle at 5% 10%, rgba(99, 102, 241, 0.1), transparent 35%),
+    radial-gradient(circle at 90% 20%, rgba(16, 185, 129, 0.12), transparent 35%),
+    var(--background);
+  color: var(--foreground);
+  min-height: 100vh;
+}
+
+.card {
+  @apply rounded-2xl border border-slate-200/80 bg-white/90 shadow-sm backdrop-blur;
+}
+
+.badge {
+  @apply inline-flex items-center rounded-full bg-indigo-100 px-3 py-1 text-xs font-semibold text-indigo-700;
+}

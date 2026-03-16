@@ -1,0 +1,100 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Teacher {
+  id           String          @id @default(cuid())
+  name         String
+  subject      String
+  slug         String          @unique
+  passwordHash String
+  createdAt    DateTime        @default(now())
+  tests        QuizTest[]
+  sessions     TeacherSession[]
+}
+
+model TeacherSession {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  teacherId String
+  teacher   Teacher  @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  @@index([teacherId])
+  @@index([expiresAt])
+}
+
+model QuizTest {
+  id              String    @id @default(cuid())
+  teacherId       String
+  teacher         Teacher   @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  title           String
+  description     String?
+  durationMinutes Int       @default(30)
+  isPublished     Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  questions       Question[]
+  attempts        Attempt[]
+
+  @@index([teacherId])
+  @@index([isPublished])
+}
+
+model Question {
+  id        String   @id @default(cuid())
+  testId    String
+  test      QuizTest @relation(fields: [testId], references: [id], onDelete: Cascade)
+  prompt    String
+  order     Int
+  options   Option[]
+  answers   AttemptAnswer[]
+
+  @@index([testId])
+  @@index([testId, order])
+}
+
+model Option {
+  id         String         @id @default(cuid())
+  questionId String
+  question   Question       @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  text       String
+  isCorrect  Boolean
+  answers    AttemptAnswer[]
+
+  @@index([questionId])
+}
+
+model Attempt {
+  id          String          @id @default(cuid())
+  testId      String
+  test        QuizTest        @relation(fields: [testId], references: [id], onDelete: Cascade)
+  studentName String
+  score       Int?
+  startedAt   DateTime        @default(now())
+  submittedAt DateTime?
+  answers     AttemptAnswer[]
+
+  @@index([testId])
+}
+
+model AttemptAnswer {
+  id               String   @id @default(cuid())
+  attemptId        String
+  attempt          Attempt  @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  questionId       String
+  question         Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  selectedOptionId String
+  selectedOption   Option   @relation(fields: [selectedOptionId], references: [id], onDelete: Cascade)
+  isCorrect        Boolean
+
+  @@index([attemptId])
+  @@index([questionId])
+  @@unique([attemptId, questionId])
+}
