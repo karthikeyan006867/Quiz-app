@@ -2,6 +2,8 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 
 import { CreateTestForm } from "@/components/CreateTestForm";
+import { DeleteTestButton } from "@/components/DeleteTestButton";
+import { LogoutButton } from "@/components/LogoutButton";
 import { PublishToggle } from "@/components/PublishToggle";
 import { getTeacherFromSessionToken, SESSION_COOKIE } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -66,7 +68,9 @@ export default async function TeacherDashboardPage({
             <p className="mt-1 text-sm text-slate-600">Subject: {teacher.subject}</p>
             <p className="mt-2 text-xs text-slate-500">Teacher URL: /teacher/{teacher.slug}/login</p>
           </div>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="flex flex-col items-end gap-4">
+            <LogoutButton slug={teacher.slug} />
+            <div className="grid gap-3 sm:grid-cols-2">
             <div className="rounded-xl border border-indigo-100 bg-indigo-50 px-4 py-3 text-center">
               <p className="text-xs text-indigo-700">Total Tests</p>
               <p className="text-xl font-bold text-indigo-900">{teacher.tests.length}</p>
@@ -77,6 +81,7 @@ export default async function TeacherDashboardPage({
                 {teacher.tests.filter((test) => test.isPublished).length}
               </p>
             </div>
+          </div>
           </div>
         </div>
       </section>
@@ -105,14 +110,23 @@ export default async function TeacherDashboardPage({
                   {test._count.questions} questions • {test.durationMinutes} mins • {test._count.attempts} attempts
                 </p>
 
-                {test.isPublished ? (
+                <div className="mt-auto flex flex-wrap gap-2">
+                  {test.isPublished ? (
+                    <Link
+                      href={`/test/${test.id}`}
+                      className="flex-1 rounded-xl bg-emerald-600 px-4 py-2 text-center text-sm font-semibold text-white transition hover:bg-emerald-500"
+                    >
+                      Open Student View
+                    </Link>
+                  ) : null}
                   <Link
-                    href={`/test/${test.id}`}
-                    className="mt-auto rounded-xl bg-emerald-600 px-4 py-2 text-center text-sm font-semibold text-white transition hover:bg-emerald-500"
+                    href={`/teacher/${teacher.slug}/tests/${test.id}/attempts`}
+                    className="rounded-xl border border-indigo-200 px-4 py-2 text-center text-sm font-semibold text-indigo-700 transition hover:bg-indigo-50"
                   >
-                    Open Student View
+                    View Results
                   </Link>
-                ) : null}
+                  <DeleteTestButton testId={test.id} />
+                </div>
               </article>
             ))}
           </div>

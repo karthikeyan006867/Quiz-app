@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 type QuizRunnerProps = {
   test: {
@@ -40,54 +40,7 @@ export function QuizRunner({ test }: QuizRunnerProps) {
     [answers]
   );
 
-  useEffect(() => {
-    if (!attemptId || result) return;
-
-    const timer = setInterval(() => {
-      setTimeLeftSeconds((previous) => {
-        if (previous <= 1) {
-          clearInterval(timer);
-          return 0;
-        }
-        return previous - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [attemptId, result]);
-
-  useEffect(() => {
-    if (attemptId && timeLeftSeconds === 0 && !result) {
-      void submitQuiz();
-    }
-  }, [attemptId, timeLeftSeconds, result]);
-
-  async function startQuiz() {
-    setError("");
-    setLoading(true);
-
-    try {
-      const response = await fetch("/api/attempts/start", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ testId: test.id, studentName }),
-      });
-
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error ?? "Unable to start test");
-      }
-
-      setAttemptId(data.attemptId);
-      setTimeLeftSeconds(test.durationMinutes * 60);
-    } catch (startError) {
-      setError(startError instanceof Error ? startError.message : "Unable to start quiz");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function submitQuiz() {
+  const submitQuiz = useCallback(async () => {
     if (!attemptId) return;
     setLoading(true);
     setError("");
@@ -116,6 +69,53 @@ export function QuizRunner({ test }: QuizRunnerProps) {
       });
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : "Unable to submit quiz");
+    } finally {
+      setLoading(false);
+    }
+  }, [attemptId, answers]);
+
+  useEffect(() => {
+    if (!attemptId || result) return;
+
+    const timer = setInterval(() => {
+      setTimeLeftSeconds((previous) => {
+        if (previous <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return previous - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [attemptId, result]);
+
+  useEffect(() => {
+    if (attemptId && timeLeftSeconds === 0 && !result) {
+      void submitQuiz();
+    }
+  }, [attemptId, timeLeftSeconds, result, submitQuiz]);
+
+  async function startQuiz() {
+    setError("");
+    setLoading(true);
+
+    try {
+      const response = await fetch("/api/attempts/start", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ testId: test.id, studentName }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error ?? "Unable to start test");
+      }
+
+      setAttemptId(data.attemptId);
+      setTimeLeftSeconds(test.durationMinutes * 60);
+    } catch (startError) {
+      setError(startError instanceof Error ? startError.message : "Unable to start quiz");
     } finally {
       setLoading(false);
     }
